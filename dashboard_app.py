@@ -85,9 +85,37 @@ def get_world_map():
 
     plt.title("Total medals count by country")  
     st.pyplot(fig)  
+
+# LEADERBOARDS 
+def get_leaderboard(selected_country, sort_by):
+    results = results_df(selected_country)
+    bios = load_bios_data()
+
+    medalists = results[results['medal'].notna()]
+
+    leaderboard = medalists.groupby(['athlete_id', 'medal']).size().unstack(fill_value=0)
     
+    for medal_type in ['Gold', 'Silver', 'Bronze']:
+        if medal_type not in leaderboard.columns:
+            leaderboard[medal_type] = 0
+    
+    leaderboard = leaderboard.merge(bios[['athlete_id', 'name']], on='athlete_id')
+
+    leaderboard['Total Medals'] = leaderboard['Gold'] + leaderboard['Silver'] + leaderboard['Bronze']
+
+    # Sort option
+    if sort_by == 'Gold Medals':
+        leaderboard = leaderboard.sort_values(by=['Gold', 'Silver', 'Bronze'], ascending=False)
+    else:  
+        leaderboard = leaderboard.sort_values(by='Total Medals', ascending=False)
+
+    leaderboard = leaderboard.head(50)
+
+    return leaderboard[['name', 'Gold', 'Silver', 'Bronze']]
+
+
 # TABS  
-tab1, tab2 = st.tabs(["Medals per country", "Heatmap of Athletes"])  
+tab1, tab2, tab3 = st.tabs(["Medals per country", "Heatmap of Athletes", "Leaderboards"])  
 
 # MEDALS PER COUNTRY TAB  
 with tab1:  
@@ -116,3 +144,12 @@ with tab2:
         st_folium(m, width=1200, height=700)  
     else:  
         st.write("No data available for the selected countries.")  
+        
+# LEADERBOARDS TAB  
+with tab3:
+    st.subheader("Top 50 Athletes by Medal Count")
+    
+    sort_by = st.selectbox("Sort by:", ["Total Medals", "Gold Medals"])
+    
+    leaderboard = get_leaderboard(selected_countries, sort_by)
+    st.table(leaderboard)
