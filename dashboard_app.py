@@ -28,8 +28,8 @@ medals_counts = results_df[results_df["medal"].notna()]
 # FILTERS
 selected_countries = st.sidebar.multiselect("Select countries", options=list(region_to_noc.keys()),
                                             default=['POL']) 
-
-include_winter = st.sidebar.checkbox("Include Winter Games?", True)  
+include_winter = st.sidebar.checkbox("Include Winter Olympic Games?", True)  
+include_medalists_only = st.sidebar.checkbox("Include only medalists?", False)  
 
 
 # Load Data Helpers  
@@ -47,6 +47,11 @@ def load_results_data():
 def bios_df(selected_country):  
     bios = load_bios_data()  
     bios = bios[bios['born_country'].isin(selected_country)] 
+    
+    if include_medalists_only:
+        results = results_df(selected_country)
+        medalist_ids = results[results['medal'].notna()]['athlete_id'].unique()
+        bios = bios[bios['athlete_id'].isin(medalist_ids)]
 
     country_df = bios[(bios['lat'].notna()) & (bios['long'].notna())]  
     return country_df  
@@ -122,6 +127,9 @@ def get_leaderboard(selected_country, sort_by):
 def get_biometrics(selected_country):
     bios = load_bios_data()
     results = results_df(selected_country)
+    
+    if include_medalists_only:
+        results = results[results['medal'].notna()]
 
     merged_df = results.merge(bios, on='athlete_id')
 
