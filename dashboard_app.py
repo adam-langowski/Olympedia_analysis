@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 sns.set_style("whitegrid")
-plt.style.use('seaborn-poster')
+plt.style.use('seaborn-v0_8-whitegrid')
 st.title("🏅 Olympics Stats Dashboard")  
 st.sidebar.title("Filters")  
 
